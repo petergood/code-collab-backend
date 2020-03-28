@@ -12,7 +12,7 @@ type Consumer interface {
 
 // KafkaConsumer is a Kafka message consumer
 type KafkaConsumer struct {
-	bootstrapServers []string
+	bootstrapServers string
 	groupID          string
 	topic            []string
 	consumer         *kafka.Consumer
@@ -20,8 +20,8 @@ type KafkaConsumer struct {
 	handler          MessageHandler
 }
 
-// NewKafkaConsumer creates a new Kafka Consumer and sets up listener
-func NewKafkaConsumer(bootstrapServers []string, groupID string, topics []string, msgHandler MessageHandler) (*KafkaConsumer, error) {
+// NewKafkaConsumer creates a new Kafka Consumer and sets up message listener
+func NewKafkaConsumer(bootstrapServers string, groupID string, topics []string, msgHandler MessageHandler) (*KafkaConsumer, error) {
 	c := &KafkaConsumer{
 		bootstrapServers: bootstrapServers,
 		groupID:          groupID,
@@ -32,7 +32,7 @@ func NewKafkaConsumer(bootstrapServers []string, groupID string, topics []string
 
 	var err error
 	c.consumer, err = kafka.NewConsumer(&kafka.ConfigMap{
-		"boostrap.servers":  bootstrapServers,
+		"bootstrap.servers": bootstrapServers,
 		"group.id":          groupID,
 		"auto.offset.reset": "earliest",
 	})
@@ -59,6 +59,8 @@ func setupConsumer(c *KafkaConsumer) {
 			if err != nil {
 				c.handler(msg)
 			}
+
+			c.consumer.Commit()
 		}
 	}()
 }
