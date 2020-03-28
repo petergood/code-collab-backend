@@ -47,3 +47,8 @@ func (p *KafkaProducer) Produce(key []byte, value []byte) error {
 
 	return nil
 }
+
+// Close closes the producer
+func (p *KafkaProducer) Close() {
+	p.Close()
+}

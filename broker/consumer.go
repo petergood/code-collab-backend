@@ -1,6 +1,10 @@
 package broker
 
-import "gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
+import (
+	"time"
+
+	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
+)
 
 // MessageHandler is invoked when a message is received
 type MessageHandler func(message *kafka.Message)
@@ -51,16 +55,21 @@ func setupConsumer(c *KafkaConsumer) {
 		for {
 			select {
 			case _ = <-c.shutdownChan:
-				break
+				return
 			default:
 			}
 
-			msg, err := c.consumer.ReadMessage(-1)
-			if err != nil {
+			msg, err := c.consumer.ReadMessage(3 * time.Second)
+			if msg != nil && err == nil {
 				c.handler(msg)
+				c.consumer.Commit()
 			}
-
-			c.consumer.Commit()
 		}
 	}()
+}
+
+// Close closes the consumer
+func (c *KafkaConsumer) Close() {
+	c.shutdownChan <- struct{}{}
+	c.consumer.Close()
 }
